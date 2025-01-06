@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>航班管理 - 机票预订系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2em;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #764ba2;
+        }
+
+        .flight-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .flight-table th,
+        .flight-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .flight-table th {
+            background-color: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .flight-table tr:hover {
+            background-color: #f7fafc;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background-color: #4299e1;
+            color: white;
+            margin-right: 8px;
+        }
+
+        .delete-btn {
+            background-color: #f56565;
+            color: white;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #718096;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #4a5568;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .modal-buttons .cancel-btn {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .modal-buttons .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .success-message {
+            color: #48bb78;
+            background-color: #f0fff4;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .flight-table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .flight-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .flight-table th {
+            background-color: #f7fafc;
+            color: #4a5568;
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .flight-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+
+        .flight-table tbody tr:hover {
+            background-color: #f7fafc;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background-color: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .status-full {
+            background-color: #fed7d7;
+            color: #c53030;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .filter-group input, .filter-group select {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            min-width: 150px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #4a5568;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            color: #2d3748;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .seats-info {
+            display: flex;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .seat-type {
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: #edf2f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✈️ 航班管理</h1>
+            <nav class="nav-links">
+                <a href="dashboard.html">返回仪表盘</a>
+                <a href="index.html">返回首页</a>
+                <a href="login.html">退出登录</a>
+            </nav>
+        </div>
+
+        <div class="success-message" id="successMessage"></div>
+
+        <button class="add-btn" onclick="showAddModal()">添加新航班</button>
+
+        <!-- 添加统计卡片 -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>总航班数</h3>
+                <div class="value" id="totalFlights">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>今日航班</h3>
+                <div class="value" id="todayFlights">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>平均上座率</h3>
+                <div class="value" id="avgOccupancy">0%</div>
+            </div>
+            <div class="stat-card">
+                <h3>总收入</h3>
+                <div class="value" id="totalRevenue">¥0</div>
+            </div>
+        </div>
+
+        <!-- 添加筛选器 -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="dateFilter">日期筛选:</label>
+                <input type="date" id="dateFilter">
+            </div>
+            <div class="filter-group">
+                <label for="routeFilter">航线筛选:</label>
+                <select id="routeFilter">
+                    <option value="">全部航线</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">状态筛选:</label>
+                <select id="statusFilter">
+                    <option value="">全部状态</option>
+                    <option value="active">有座位</option>
+                    <option value="full">已满座</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flight-table-container">
+            <table class="flight-table">
+                <thead>
+                    <tr>
+                        <th>航班号</th>
+                        <th>航线</th>
+                        <th>日期</th>
+                        <th>时间</th>
+                        <th>座位情况</th>
+                        <th>价格区间</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="flightTableBody">
+                    <!-- 航班数据将通过 JavaScript 动态添加 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 添加/编辑航班的模态框 -->
+    <div class="modal" id="flightModal" onclick="closeModalOnOutsideClick(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">添加新航班</h2>
+                <button class="close-btn" onclick="hideModal()">&times;</button>
+            </div>
+            <form id="flightForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="flightId">航班号</label>
+                        <input type="text" id="flightId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="departure">出发城市</label>
+                        <input type="text" id="departure" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="arrival">到达城市</label>
+                        <input type="text" id="arrival" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="departureTime">起飞时间</label>
+                        <input type="time" id="departureTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="arrivalTime">到达时间</label>
+                        <input type="time" id="arrivalTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="economyPrice">经济舱价格</label>
+                        <input type="number" id="economyPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessPrice">商务舱价格</label>
+                        <input type="number" id="businessPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="firstPrice">头等舱价格</label>
+                        <input type="number" id="firstPrice" required min="0">
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" onclick="hideModal()">取消</button>
+                    <button type="submit" class="save-btn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="simulator-status" style="margin: 10px 0;">
+        <span class="status-badge status-active">模拟器运行中</span>
+        <small style="color: #666; margin-left: 10px;">数据每5秒自动更新</small>
+    </div>
+
+    <script src="flight-simulator.js"></script>
+    <script>
+        // 检查管理员权限
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            if (!userInfo || userInfo.role !== 'admin') {
+                alert('您没有权限访问此页面');
+                window.location.href = 'index.html';
+            }
+        });
+
+        // 修改更新逻辑
+        function updateFlightTable(flights) {
+            if (!flights) return;
+            
+            const tableBody = document.getElementById('flightTableBody');
+            tableBody.innerHTML = flights.map(flight => {
+                const totalSeats = {
+                    economy: 120,
+                    business: 30,
+                    first: 10
+                };
+                
+                // 计算剩余座位
+                const remainingSeats = {
+                    economy: totalSeats.economy - (flight.bookedSeats?.economy || 0),
+                    business: totalSeats.business - (flight.bookedSeats?.business || 0),
+                    first: totalSeats.first - (flight.bookedSeats?.first || 0)
+                };
+
+                // 计算最低和最高价格
+                const priceRange = `¥${flight.price.economy} - ¥${flight.price.first}`;
+
+                // 判断航班状态
+                const isFull = Object.values(remainingSeats).every(seats => seats === 0);
+                const status = isFull ? 
+                    '<span class="status-badge status-full">已满座</span>' : 
+                    '<span class="status-badge status-active">有座位</span>';
+
+                return `
+                    <tr>
+                        <td>${flight.id}</td>
+                        <td>${flight.from} → ${flight.to}</td>
+                        <td>${flight.date || '每日航班'}</td>
+                        <td>${flight.departure} - ${flight.arrival}</td>
+                        <td>
+                            <div class="seats-info">
+                                <span class="seat-type">经济舱: ${remainingSeats.economy}</span>
+                                <span class="seat-type">商务舱: ${remainingSeats.business}</span>
+                                <span class="seat-type">头等舱: ${remainingSeats.first}</span>
+                            </div>
+                        </td>
+                        <td>${priceRange}</td>
+                        <td>${status}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="editFlight('${flight.id}')">编辑</button>
+                            <button class="action-btn delete-btn" onclick="deleteFlight('${flight.id}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        // 页面加载时从 localStorage 获取数据
+        document.addEventListener('DOMContentLoaded', function() {
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            updateFlightTable(flights);
+        });
+
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalFlights').textContent = flights.length;
+            document.getElementById('todayFlights').textContent = flights.filter(f => !f.date || f.date === getCurrentDate()).length;
+            document.getElementById('avgOccupancy').textContent = calculateAverageOccupancy() + '%';
+            document.getElementById('totalRevenue').textContent = '¥' + calculateTotalRevenue();
+        }
+
+        // 计算平均上座率
+        function calculateAverageOccupancy() {
+            // 这里可以添加实际的计算逻辑
+            return Math.floor(Math.random() * 30 + 70);
+        }
+
+        // 计算总收入
+        function calculateTotalRevenue() {
+            // 这里可以添加实际的计算逻辑
+            return (Math.floor(Math.random() * 50000 + 100000)).toLocaleString();
+        }
+
+        // 获取当前日期
+        function getCurrentDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // 添加筛选器事件监听
+        document.getElementById('dateFilter').addEventListener('change', filterFlights);
+        document.getElementById('routeFilter').addEventListener('change', filterFlights);
+        document.getElementById('statusFilter').addEventListener('change', filterFlights);
+
+        function filterFlights() {
+            // 这里可以添加实际的筛选逻辑
+            updateFlightTable();
+        }
+
+        // 初始化页面时更新统计数据
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFlightTable();
+            // 填充航线筛选器选项
+            const routes = [...new Set(flights.map(f => `${f.from} → ${f.to}`))];
+            const routeFilter = document.getElementById('routeFilter');
+            routes.forEach(route => {
+                const option = document.createElement('option');
+                option.value = route;
+                option.textContent = route;
+                routeFilter.appendChild(option);
+            });
+        });
+
+        // 显示添加航班模态框
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = '添加新航班';
+            document.getElementById('flightForm').reset();
+            document.getElementById('flightModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 显示编辑航班模态框
+        function editFlight(flightId) {
+            const flight = flights.find(f => f.id === flightId);
+            if (flight) {
+                document.getElementById('modalTitle').textContent = '编辑航班';
+                document.getElementById('flightId').value = flight.id;
+                document.getElementById('departure').value = flight.from;
+                document.getElementById('arrival').value = flight.to;
+                document.getElementById('departureTime').value = flight.departure;
+                document.getElementById('arrivalTime').value = flight.arrival;
+                document.getElementById('economyPrice').value = flight.price.economy;
+                document.getElementById('businessPrice').value = flight.price.business;
+                document.getElementById('firstPrice').value = flight.price.first;
+                document.getElementById('flightModal').style.display = 'flex';
+            }
+        }
+
+        // 隐藏模态框
+        function hideModal() {
+            document.getElementById('flightModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 删除航班
+        function deleteFlight(flightId) {
+            if (confirm('确定要删除这个航班吗？')) {
+                flights = flights.filter(f => f.id !== flightId);
+                localStorage.setItem('flights', JSON.stringify(flights));
+                updateFlightTable();
+                showSuccessMessage('航班已删除');
+            }
+        }
+
+        // 处理表单提交
+        document.getElementById('flightForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const flightData = {
+                id: document.getElementById('flightId').value,
+                from: document.getElementById('departure').value,
+                to: document.getElementById('arrival').value,
+                departure: document.getElementById('departureTime').value,
+                arrival: document.getElementById('arrivalTime').value,
+                price: {
+                    economy: parseInt(document.getElementById('economyPrice').value),
+                    business: parseInt(document.getElementById('businessPrice').value),
+                    first: parseInt(document.getElementById('firstPrice').value)
+                }
+            };
+
+            const existingIndex = flights.findIndex(f => f.id === flightData.id);
+            if (existingIndex >= 0) {
+                flights[existingIndex] = flightData;
+                showSuccessMessage('航班信息已更新');
+            } else {
+                flights.push(flightData);
+                showSuccessMessage('新航班已添加');
+            }
+
+            localStorage.setItem('flights', JSON.stringify(flights));
+            updateFlightTable();
+            hideModal();
+        });
+
+        // 显示成功消息
+        function showSuccessMessage(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // 点击模态框外部关闭
+        function closeModalOnOutsideClick(event) {
+            if (event.target.className === 'modal') {
+                hideModal();
+            }
+        }
+
+        // 添加键盘事件监听，按 ESC 键关闭模态框
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideModal();
+            }
+        });
+    </script>
+</body>
+</html> 

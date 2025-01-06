@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单支付 - 机票预订系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .order-info {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .order-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            color: #718096;
+        }
+
+        .value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .total-amount {
+            font-size: 1.5em;
+            color: #667eea;
+            text-align: right;
+            margin: 20px 0;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .payment-timer {
+            color: #e53e3e;
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+
+        .payment-status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f0fff4;
+            color: #2f855a;
+            display: none;
+        }
+
+        .payment-guide {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+
+        .guide-step {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .qr-code {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>订单支付</h1>
+            <p style="color: #718096; margin-top: 10px;">请在规定时间内完成支付</p>
+        </div>
+
+        <div class="order-info">
+            <div class="order-row">
+                <span class="label">订单号</span>
+                <span class="value" id="orderId"></span>
+            </div>
+            <div class="order-row">
+                <span class="label">航班号</span>
+                <span class="value" id="flightId"></span>
+            </div>
+            <div class="order-row">
+                <span class="label">乘客姓名</span>
+                <span class="value" id="passengerName"></span>
+            </div>
+            <div class="order-row">
+                <span class="label">航线</span>
+                <span class="value" id="route"></span>
+            </div>
+            <div class="order-row">
+                <span class="label">起飞时间</span>
+                <span class="value" id="departureTime"></span>
+            </div>
+        </div>
+
+        <div class="total-amount">
+            支付金额：<span id="amount">¥0.00</span>
+        </div>
+
+        <div class="payment-timer" id="paymentTimer">
+            支付倒计时：14:59
+        </div>
+
+        <div class="qr-section">
+            <h3>请使用<span id="paymentMethod">支付宝</span>扫码支付</h3>
+            <div class="qr-code" id="qrCode">
+                <!-- 这里可以放置实际的二维码图片 -->
+                <img src="path/to/qr-code.png" alt="支付二维码" style="width: 100%;">
+            </div>
+        </div>
+
+        <div class="payment-guide">
+            <h3>支付步骤：</h3>
+            <div class="guide-step">
+                <div class="step-number">1</div>
+                <div>打开手机<span id="paymentApp">支付宝</span>APP</div>
+            </div>
+            <div class="guide-step">
+                <div class="step-number">2</div>
+                <div>点击右上角"扫一扫"</div>
+            </div>
+            <div class="guide-step">
+                <div class="step-number">3</div>
+                <div>扫描上方二维码完成支付</div>
+            </div>
+        </div>
+
+        <div class="payment-status" id="paymentStatus">
+            支付成功！正在跳转...
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-secondary" onclick="cancelPayment()">取消支付</button>
+            <button class="btn btn-primary" onclick="checkPaymentStatus()">我已完成支付</button>
+        </div>
+    </div>
+
+    <script>
+        // 生成随机订单号
+        function generateOrderId() {
+            return 'ORDER' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
+        }
+
+        // 从 URL 参数获取订单信息
+        function getOrderInfo() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                flightId: params.get('flightId'),
+                amount: params.get('amount'),
+                passengerName: params.get('passengerName'),
+                paymentMethod: params.get('paymentMethod')
+            };
+        }
+
+        // 初始化页面数据
+        function initializePayment() {
+            const orderInfo = getOrderInfo();
+            const orderId = generateOrderId();
+
+            document.getElementById('orderId').textContent = orderId;
+            document.getElementById('amount').textContent = `¥${orderInfo.amount || '0.00'}`;
+            document.getElementById('paymentMethod').textContent = getPaymentMethodName(orderInfo.paymentMethod);
+            document.getElementById('paymentApp').textContent = getPaymentMethodName(orderInfo.paymentMethod);
+
+            // 获取航班信息
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            const flight = flights.find(f => f.id === orderInfo.flightId);
+            
+            if (flight) {
+                document.getElementById('flightId').textContent = flight.id;
+                document.getElementById('passengerName').textContent = orderInfo.passengerName;
+                document.getElementById('route').textContent = `${flight.from} → ${flight.to}`;
+                document.getElementById('departureTime').textContent = `${flight.date} ${flight.departure}`;
+            }
+
+            startPaymentTimer();
+        }
+
+        // 支付倒计时
+        function startPaymentTimer() {
+            let timeLeft = 900; // 15分钟
+            const timerElement = document.getElementById('paymentTimer');
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerElement.textContent = `支付倒计时：${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert('支付超时，请重新下单');
+                    window.location.href = 'special-offers.html';
+                }
+            }, 1000);
+        }
+
+        function getPaymentMethodName(method) {
+            const methods = {
+                alipay: '支付宝',
+                wechat: '微信支付',
+                card: '银行卡'
+            };
+            return methods[method] || method;
+        }
+
+        function cancelPayment() {
+            if (confirm('确定要取消支付吗？')) {
+                window.location.href = 'special-offers.html';
+            }
+        }
+
+        function checkPaymentStatus() {
+            // 这里可以添加实际的支付状态检查逻辑
+            const paymentStatus = document.getElementById('paymentStatus');
+            paymentStatus.style.display = 'block';
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initializePayment);
+    </script>
+</body>
+</html>

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机票预订系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        input:hover, select:hover {
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+
+        /* 添加图标装饰 */
+        .icon {
+            position: absolute;
+            right: 15px;
+            top: 40px;
+            color: #a0aec0;
+        }
+
+        /* 添加动画效果 */
+        .form-group {
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+
+        /* 添加功能模块样式 */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-icon {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .module-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .module-description {
+            color: #718096;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .admin-modules {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+            display: none;
+        }
+
+        .admin-modules h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✈️ 机票预订系统</h1>
+            <div class="user-info">
+                <span style="color: #4a5568; margin-right: 10px;">
+                    欢迎，<span id="userName">游客</span>
+                </span>
+                <a href="profile.html" style="color: #667eea; text-decoration: none; margin-right: 10px;">
+                    个人信息
+                </a>
+                <a href="#" onclick="logout()" style="color: #667eea; text-decoration: none;">
+                    退出登录
+                </a>
+            </div>
+        </div>
+
+        <!-- 用户功能模块 -->
+        <div class="modules-grid">
+            <!-- 航班查询模块 -->
+            <a href="#" class="module-card" onclick="showSearchForm()">
+                <div class="module-icon">🔍</div>
+                <div class="module-title">航班查询</div>
+                <div class="module-description">
+                    快速查询航班信息，支持多种筛选条件，轻松找到心仪航班
+                </div>
+            </a>
+
+            <!-- 特价机票模块 -->
+            <a href="special-offers.html" class="module-card">
+                <div class="module-icon">🏷️</div>
+                <div class="module-title">特价机票</div>
+                <div class="module-description">
+                    浏览最新特价机票信息，享受超值折扣优惠
+                </div>
+            </a>
+
+            <!-- 我的订单模块 -->
+            <a href="my-orders.html" class="module-card">
+                <div class="module-icon">📋</div>
+                <div class="module-title">我的订单</div>
+                <div class="module-description">
+                    查看订单历史，管理当前订单，办理退改签业务
+                </div>
+            </a>
+
+            <!-- 会员服务模块 -->
+            <a href="profile.html" class="module-card">
+                <div class="module-icon">👤</div>
+                <div class="module-title">会员服务</div>
+                <div class="module-description">
+                    管理个人信息，查看会员特权，累积飞行里程
+                </div>
+            </a>
+        </div>
+
+        <!-- 管理员功能模块 -->
+        <div id="adminModules" class="admin-modules">
+            <h2>管理员功能</h2>
+            <div class="modules-grid">
+                <!-- 航班管理模块 -->
+                <a href="flight-management.html" class="module-card">
+                    <div class="module-icon">✈️</div>
+                    <div class="module-title">航班管理</div>
+                    <div class="module-description">
+                        管理航班信息，添加和修改航班，设置特价优惠
+                    </div>
+                </a>
+
+                <!-- 数据统计模块 -->
+                <a href="dashboard.html" class="module-card">
+                    <div class="module-icon">📊</div>
+                    <div class="module-title">数据统计</div>
+                    <div class="module-description">
+                        查看运营数据，分析销售情况，生成统计报表
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 航班搜索表单（默认隐藏） -->
+        <div id="searchForm" style="display: none; margin-top: 30px;">
+            <form id="flightBooking" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div class="form-group">
+                    <label for="departure">出发城市</label>
+                    <input type="text" id="departure" name="departure" required placeholder="请输入出发城市">
+                </div>
+
+                <div class="form-group">
+                    <label for="arrival">到达城市</label>
+                    <input type="text" id="arrival" name="arrival" required placeholder="请输入到达城市">
+                </div>
+
+                <div class="form-group">
+                    <label for="date">出发日期</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="passengers">乘客人数</label>
+                    <select id="passengers" name="passengers">
+                        <option value="1">1人</option>
+                        <option value="2">2人</option>
+                        <option value="3">3人</option>
+                        <option value="4">4人</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="class">舱位等级</label>
+                    <select id="class" name="class">
+                        <option value="economy">经济舱</option>
+                        <option value="business">商务舱</option>
+                        <option value="first">头等舱</option>
+                    </select>
+                </div>
+
+                <button type="submit" style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 12px 25px;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    margin-top: 20px;
+                    transition: transform 0.2s ease;
+                ">搜索航班</button>
+            </form>
+        </div>
+
+        <!-- 搜索结果区域 -->
+        <div id="searchResults" style="display: none; margin-top: 30px;">
+            <!-- 保持原有的搜索结果显示内容 -->
+        </div>
+
+        <!-- 先实现一个简单的航班信息展示板 -->
+        <div id="flightBoard" style="display: none; margin-top: 30px;">
+            <div class="flight-display" style="
+                background: #1a202c;
+                padding: 25px;
+                border-radius: 15px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            ">
+                <!-- 顶部信息栏 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: #fff; font-size: 1.5em;">✈️ 实时航班信息</h2>
+                    <div style="color: #a0aec0;">
+                        <span id="currentTime"></span>
+                    </div>
+                </div>
+
+                <!-- 航班信息表格 -->
+                <div class="flight-board" style="
+                    background: #000;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    font-family: 'Courier New', monospace;
+                ">
+                    <!-- 表头 -->
+                    <div style="
+                        background: #2d3748;
+                        padding: 15px;
+                        display: grid;
+                        grid-template-columns: 1fr 1.5fr 1fr 1fr;
+                        gap: 10px;
+                        color: #90cdf4;
+                        font-weight: bold;
+                        text-align: center;
+                    ">
+                        <div>航班号</div>
+                        <div>航线</div>
+                        <div>时间</div>
+                        <div>状态</div>
+                    </div>
+                    
+                    <!-- 航班信息列表 -->
+                    <div id="flightList" style="
+                        max-height: 400px;
+                        overflow-y: auto;
+                    ">
+                        <!-- 航班信息将通过 JavaScript 动态添加 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // 基础功能：更新时间和航班信息
+            function updateTime() {
+                const now = new Date();
+                document.getElementById('currentTime').textContent = 
+                    now.toLocaleTimeString('zh-CN', { hour12: false });
+            }
+
+            function updateFlightBoard() {
+                const flights = JSON.parse(localStorage.getItem('flights')) || [];
+                const flightList = document.getElementById('flightList');
+                
+                const flightInfo = flights.map(flight => {
+                    const status = Math.random() > 0.8 ? '延误' : '准时';
+                    const statusColor = status === '延误' ? '#e53e3e' : '#48bb78';
+                    
+                    return `
+                        <div style="
+                            padding: 15px;
+                            display: grid;
+                            grid-template-columns: 1fr 1.5fr 1fr 1fr;
+                            gap: 10px;
+                            color: #fff;
+                            border-bottom: 1px solid #2d3748;
+                            text-align: center;
+                        ">
+                            <div>${flight.id}</div>
+                            <div>${flight.from} → ${flight.to}</div>
+                            <div>${flight.departure}</div>
+                            <div style="color: ${statusColor}">${status}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                flightList.innerHTML = flightInfo;
+            }
+
+            // 修改 showSearchForm 函数
+            function showSearchForm() {
+                const searchForm = document.getElementById('searchForm');
+                const flightBoard = document.getElementById('flightBoard');
+                
+                if (searchForm.style.display === 'none') {
+                    searchForm.style.display = 'block';
+                    flightBoard.style.display = 'block';
+                    // 初始化展示板
+                    updateTime();
+                    updateFlightBoard();
+                    // 启动定时更新
+                    setInterval(updateTime, 1000);
+                    setInterval(updateFlightBoard, 30000);
+                } else {
+                    searchForm.style.display = 'none';
+                    flightBoard.style.display = 'none';
+                }
+            }
+
+            // 页面加载时检查用户权限
+            document.addEventListener('DOMContentLoaded', function() {
+                const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+                const userName = document.getElementById('userName');
+                const adminModules = document.getElementById('adminModules');
+                
+                if (userInfo) {
+                    userName.textContent = userInfo.name;
+                    if (userInfo.role === 'admin') {
+                        adminModules.style.display = 'block';
+                    }
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+
+            // 添加表单提交处理
+            document.getElementById('flightBooking').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const button = this.querySelector('button');
+                const departure = document.getElementById('departure').value;
+                const arrival = document.getElementById('arrival').value;
+                const date = document.getElementById('date').value;
+                const passengers = document.getElementById('passengers').value;
+                const classType = document.getElementById('class').value;
+
+                button.innerHTML = '搜索中...';
+                button.disabled = true;
+                
+                // 模拟API请求延迟
+                setTimeout(() => {
+                    displayFlights(departure, arrival, classType, passengers);
+                    button.innerHTML = '搜索航班';
+                    button.disabled = false;
+                }, 1000);
+            });
+
+            function displayFlights(departure, arrival, classType, passengers) {
+                const searchResults = document.getElementById('searchResults');
+                const flightList = document.getElementById('flightList');
+                
+                // 从 localStorage 获取航班数据
+                const flights = JSON.parse(localStorage.getItem('flights')) || [];
+                
+                // 过滤符合条件的航班
+                const filteredFlights = flights.filter(flight => 
+                    flight.from.includes(departure) && 
+                    flight.to.includes(arrival)
+                );
+
+                searchResults.style.display = 'block';
+                
+                if (filteredFlights.length === 0) {
+                    searchResults.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #4a5568; background: white; border-radius: 15px;">
+                            未找到符合条件的航班，请尝试其他日期或航线
+                        </div>
+                    `;
+                } else {
+                    searchResults.innerHTML = `
+                        <h2 style="color: #2d3748; margin-bottom: 20px;">航班查询结果</h2>
+                        <div id="flightList">
+                            ${filteredFlights.map(flight => `
+                                <div class="flight-card" style="
+                                    background: white;
+                                    border-radius: 10px;
+                                    padding: 20px;
+                                    margin-bottom: 15px;
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                    transition: transform 0.2s;
+                                ">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="font-size: 1.2em; font-weight: bold; color: #2d3748;">
+                                                ${flight.id}
+                                            </div>
+                                            <div style="color: #4a5568; margin: 10px 0;">
+                                                ${flight.from} → ${flight.to}
+                                            </div>
+                                            <div style="color: #718096;">
+                                                ${flight.departure} - ${flight.arrival}
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 1.5em; font-weight: bold; color: #667eea;">
+                                                ¥${flight.price[classType]}
+                                            </div>
+                                            <button onclick="bookFlight('${flight.id}', '${classType}', ${passengers})" 
+                                                    style="
+                                                        background: #667eea;
+                                                        color: white;
+                                                        border: none;
+                                                        padding: 8px 15px;
+                                                        border-radius: 5px;
+                                                        margin-top: 10px;
+                                                        cursor: pointer;
+                                                    ">
+                                                预订
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            function bookFlight(flightId, classType, passengers) {
+                // 创建预订表单模态框
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                `;
+
+                // 获取航班信息
+                const flights = JSON.parse(localStorage.getItem('flights')) || [];
+                const flight = flights.find(f => f.id === flightId);
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 15px;
+                        width: 90%;
+                        max-width: 500px;
+                    ">
+                        <h2 style="margin-bottom: 20px;">填写乘客信息</h2>
+                        <form id="passengerForm">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">乘客姓名</label>
+                                <input type="text" name="passengerName" required style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                ">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">身份证号</label>
+                                <input type="text" name="idNumber" required style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                ">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">联系电话</label>
+                                <input type="tel" name="phone" required style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                ">
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 5px;">电子邮箱</label>
+                                <input type="email" name="email" required style="
+                                    width: 100%;
+                                    padding: 8px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                ">
+                            </div>
+                            <div style="text-align: right;">
+                                <button type="button" onclick="closeBookingModal()" style="
+                                    padding: 8px 15px;
+                                    margin-right: 10px;
+                                    border: none;
+                                    border-radius: 4px;
+                                    background: #e2e8f0;
+                                    cursor: pointer;
+                                ">取消</button>
+                                <button type="submit" style="
+                                    padding: 8px 15px;
+                                    border: none;
+                                    border-radius: 4px;
+                                    background: #667eea;
+                                    color: white;
+                                    cursor: pointer;
+                                ">提交订单</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // 添加表单提交事件
+                document.getElementById('passengerForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // 创建订单
+                    const orderInfo = {
+                        orderId: generateOrderId(),
+                        flightId: flightId,
+                        flightInfo: flight,
+                        classType: classType,
+                        passengers: passengers,
+                        amount: flight.price[classType] * passengers,
+                        passengerName: this.passengerName.value,
+                        idNumber: this.idNumber.value,
+                        phone: this.phone.value,
+                        email: this.email.value,
+                        orderTime: new Date().toISOString(),
+                        status: 'pending' // pending, paid, cancelled
+                    };
+
+                    // 保存订单到 localStorage
+                    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                    orders.push(orderInfo);
+                    localStorage.setItem('orders', JSON.stringify(orders));
+
+                    // 关闭模态框
+                    closeBookingModal();
+
+                    // 跳转到支付页面
+                    window.location.href = `payment.html?orderId=${orderInfo.orderId}`;
+                });
+            }
+
+            function closeBookingModal() {
+                const modal = document.querySelector('div[style*="position: fixed"]');
+                if (modal) {
+                    modal.remove();
+                }
+            }
+
+            function generateOrderId() {
+                const timestamp = Date.now().toString().slice(-8);
+                const random = Math.random().toString(36).slice(-4).toUpperCase();
+                return `ORDER${timestamp}${random}`;
+            }
+
+            // 设置日期输入框的最小值为今天
+            const dateInput = document.getElementById('date');
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.min = today;
+
+            // 添加退出登录函数
+            function logout() {
+                // 清除用户信息
+                localStorage.removeItem('userInfo');
+                // 可选：清除其他相关数据
+                // localStorage.removeItem('orders');
+                
+                // 跳转到登录页面
+                window.location.href = 'login.html';
+            }
+        </script>
+    </div>
+</body>
+</html>

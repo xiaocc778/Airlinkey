@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 机票预订系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .links {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h1>✈️ 注册账号</h1>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">确认密码</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="name">姓名</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <button type="submit">注册</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+        <div class="links">
+            <a href="login.html">已有账号？立即登录</a>
+        </div>
+    </div>
+
+    <script>
+        // 初始化默认管理员账号
+        function initializeAdmin() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            if (!users.some(user => user.username === 'admin')) {
+                users.push({
+                    username: 'admin',
+                    password: 'admin',
+                    name: '管理员',
+                    role: 'admin'
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+        }
+
+        // 页面加载时初始化管理员账号
+        initializeAdmin();
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const name = document.getElementById('name').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            // 验证密码
+            if (password !== confirmPassword) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = '两次输入的密码不一致';
+                return;
+            }
+
+            // 获取现有用户数据
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+
+            // 检查用户名是否已存在
+            if (users.some(user => user.username === username)) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = '用户名已存在';
+                return;
+            }
+
+            // 添加新用户
+            const newUser = {
+                username: username,
+                password: password,
+                name: name,
+                role: 'user'
+            };
+
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            // 自动登录
+            const userInfo = {
+                name: name,
+                username: username,
+                role: 'user'
+            };
+            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+
+            // 注册成功，跳转到首页
+            alert('注册成功！');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html> 

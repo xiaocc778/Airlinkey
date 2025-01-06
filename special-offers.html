@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特价机票 - 机票预订系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .offer-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .offer-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .discount-badge {
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: #48bb78;
+            color: white;
+            padding: 5px 40px;
+            transform: rotate(45deg);
+            font-weight: bold;
+        }
+
+        .route {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .time {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+
+        .discounted-price {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #48bb78;
+        }
+
+        .deadline {
+            font-size: 0.9em;
+            color: #e53e3e;
+            margin-top: 10px;
+        }
+
+        .book-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .book-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: white;
+            font-weight: 500;
+        }
+
+        .filter-group select {
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .no-offers {
+            text-align: center;
+            color: white;
+            padding: 40px;
+            font-size: 1.2em;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .hot-deal {
+            animation: pulse 2s infinite;
+        }
+
+        /* 预订模态框样式 */
+        .booking-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .booking-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .booking-header h2 {
+            color: #2d3748;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .booking-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #f7fafc;
+            color: #718096;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .booking-close:hover {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+            z-index: 1;
+            transform: translateY(-50%);
+            opacity: 0.2;
+        }
+
+        .step {
+            position: relative;
+            background: white;
+            padding: 0 15px;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-number {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .step:not(.active) .step-number {
+            background: #e2e8f0;
+            color: #718096;
+        }
+
+        .step-label {
+            font-size: 0.9em;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+        }
+
+        .timer {
+            background: #fff5f5;
+            color: #e53e3e;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .timer::before {
+            content: '⏱️';
+        }
+
+        .booking-details {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .booking-details h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-label {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 12px 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            background: white;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .payment-method {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+        }
+
+        .payment-method.selected {
+            background: linear-gradient(135deg, #f0f5ff 0%, #e6e9ff 100%);
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.1);
+        }
+
+        .payment-method img {
+            height: 40px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method.selected img {
+            transform: scale(1.1);
+        }
+
+        .book-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.2);
+        }
+
+        .book-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(102, 126, 234, 0.3);
+        }
+
+        .book-btn:active {
+            transform: translateY(0);
+        }
+
+        #orderSummary {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            color: #718096;
+        }
+
+        .summary-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .total-price {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e2e8f0;
+            text-align: right;
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✈️ 特价机票</h1>
+            <nav>
+                <a href="my-orders.html" style="color: #667eea; text-decoration: none; margin-right: 20px;">我的订单</a>
+                <span id="adminLinks" style="display: none;">
+                    <a href="flight-management.html" style="color: #667eea; text-decoration: none; margin-right: 20px;">航班管理</a>
+                </span>
+                <a href="index.html" style="color: #667eea; text-decoration: none;">返回首页</a>
+            </nav>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>出发城市:</label>
+                <select id="departureFilter">
+                    <option value="">全部</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>折扣类型:</label>
+                <select id="discountFilter">
+                    <option value="">全部</option>
+                    <option value="percentage">折扣率</option>
+                    <option value="fixed">固定优惠</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>排序方式:</label>
+                <select id="sortFilter">
+                    <option value="discount">优惠力度</option>
+                    <option value="price">价格</option>
+                    <option value="date">截止日期</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="offers-grid" id="offersContainer">
+            <!-- 特价航班将通过 JavaScript 动态添加 -->
+        </div>
+    </div>
+
+    <div class="booking-modal" id="bookingModal">
+        <div class="booking-content">
+            <div class="booking-header">
+                <h2>预订特价机票</h2>
+                <button class="booking-close" onclick="closeBooking()">&times;</button>
+            </div>
+
+            <div class="steps">
+                <div class="step active" id="step1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">填写信息</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">选择支付</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">确认订单</div>
+                </div>
+            </div>
+
+            <div class="timer" id="bookingTimer">
+                请在 15:00 内完成预订
+            </div>
+
+            <div class="step-content active" id="stepContent1">
+                <div class="booking-details" id="flightDetails">
+                    <!-- 航班详情将通过 JavaScript 填充 -->
+                </div>
+
+                <form id="passengerForm" class="passenger-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="passenger-name">姓名</label>
+                            <input 
+                                type="text" 
+                                id="passenger-name" 
+                                name="passenger-name" 
+                                required 
+                                placeholder="请输入姓名"
+                                autocomplete="name">
+                        </div>
+                        <div class="form-group">
+                            <label for="id-number">身份证号</label>
+                            <input 
+                                type="text" 
+                                id="id-number" 
+                                name="id-number" 
+                                required 
+                                placeholder="请输入身份证号"
+                                pattern="\d{17}[\dXx]"
+                                maxlength="18">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">手机号</label>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                name="phone" 
+                                required 
+                                placeholder="请输入手机号"
+                                pattern="1[3-9]\d{9}"
+                                maxlength="11"
+                                autocomplete="tel">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">邮箱</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                required 
+                                placeholder="请输入邮箱"
+                                autocomplete="email">
+                        </div>
+                    </div>
+                    <button type="button" class="book-btn" onclick="nextStep(2)">下一步</button>
+                </form>
+            </div>
+
+            <div class="step-content" id="stepContent2">
+                <div class="payment-methods">
+                    <div class="payment-method" onclick="selectPayment(this, 'alipay')">
+                        <img src="https://www.alipay.com/favicon.ico" alt="支付宝">
+                        <div>支付宝</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment(this, 'wechat')">
+                        <img src="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico" alt="微信">
+                        <div>微信支付</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment(this, 'card')">
+                        <img src="path/to/card-icon.png" alt="银行卡">
+                        <div>银行卡</div>
+                    </div>
+                </div>
+                <button type="button" class="book-btn" onclick="nextStep(3)">下一步</button>
+            </div>
+
+            <div class="step-content" id="stepContent3">
+                <div class="booking-details">
+                    <h3>订单确认</h3>
+                    <div id="orderSummary">
+                        <!-- 订单摘要将通过 JavaScript 填充 -->
+                    </div>
+                </div>
+                <button type="button" class="book-btn" onclick="confirmBooking()">确认支付</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="flight-simulator.js"></script>
+    <script>
+        let currentBookingFlight = null;
+        let selectedPayment = null;
+        let bookingTimer = null;
+        let timeLeft = 900; // 15分钟 = 900秒
+
+        function calculateDiscountedPrice(price, discount) {
+            if (!discount) return price;
+            if (discount.type === 'percentage') {
+                return Math.round(price * (100 - discount.value) / 100);
+            }
+            return Math.max(0, price - discount.value);
+        }
+
+        function updateOffers(flights) {
+            const container = document.getElementById('offersContainer');
+            const departureFilter = document.getElementById('departureFilter').value;
+            const discountFilter = document.getElementById('discountFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            // 筛选有折扣的航班
+            let discountedFlights = flights.filter(flight => flight.discount);
+
+            // 应用筛选条件
+            if (departureFilter) {
+                discountedFlights = discountedFlights.filter(flight => flight.from === departureFilter);
+            }
+            if (discountFilter) {
+                discountedFlights = discountedFlights.filter(flight => flight.discount.type === discountFilter);
+            }
+
+            // 排序
+            discountedFlights.sort((a, b) => {
+                switch (sortFilter) {
+                    case 'discount':
+                        const discountA = calculateDiscountedPrice(a.price.economy, a.discount);
+                        const discountB = calculateDiscountedPrice(b.price.economy, b.discount);
+                        return discountA - discountB;
+                    case 'price':
+                        return a.price.economy - b.price.economy;
+                    case 'date':
+                        return new Date(a.discount.endDate) - new Date(b.discount.endDate);
+                    default:
+                        return 0;
+                }
+            });
+
+            if (discountedFlights.length === 0) {
+                container.innerHTML = '<div class="no-offers">当前没有特价航班</div>';
+                return;
+            }
+
+            container.innerHTML = discountedFlights.map(flight => {
+                const discountedPrice = calculateDiscountedPrice(flight.price.economy, flight.discount);
+                const discountBadge = flight.discount.type === 'percentage' 
+                    ? `${flight.discount.value}% OFF`
+                    : `省￥${flight.discount.value}`;
+                const isHotDeal = flight.discount.value > (flight.discount.type === 'percentage' ? 30 : 500);
+
+                return `
+                    <div class="offer-card ${isHotDeal ? 'hot-deal' : ''}">
+                        <div class="discount-badge">${discountBadge}</div>
+                        <div class="route">${flight.from} → ${flight.to}</div>
+                        <div class="time">${flight.date} ${flight.departure}-${flight.arrival}</div>
+                        <div class="price">
+                            <span class="original-price">￥${flight.price.economy}</span>
+                            <span class="discounted-price">￥${discountedPrice}</span>
+                        </div>
+                        <div class="deadline">优惠截止: ${flight.discount.endDate}</div>
+                        <button class="book-btn" onclick="bookFlight('${flight.id}')">立即预订</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 更新城市筛选器选项
+        function updateCityFilter(flights) {
+            const cities = [...new Set(flights.map(f => f.from))];
+            const filter = document.getElementById('departureFilter');
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                filter.appendChild(option);
+            });
+        }
+
+        // 添加筛选器事件监听
+        document.getElementById('departureFilter').addEventListener('change', () => {
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            updateOffers(flights);
+        });
+        document.getElementById('discountFilter').addEventListener('change', () => {
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            updateOffers(flights);
+        });
+        document.getElementById('sortFilter').addEventListener('change', () => {
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            updateOffers(flights);
+        });
+
+        // 预订功能
+        function bookFlight(flightId) {
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            currentBookingFlight = flights.find(f => f.id === flightId);
+            if (currentBookingFlight) {
+                showBookingModal();
+                updateFlightDetails();
+                startBookingTimer();
+            }
+        }
+
+        function showBookingModal() {
+            document.getElementById('bookingModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBooking() {
+            document.getElementById('bookingModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            resetBooking();
+        }
+
+        function updateFlightDetails() {
+            const discountedPrice = calculateDiscountedPrice(
+                currentBookingFlight.price.economy,
+                currentBookingFlight.discount
+            );
+
+            document.getElementById('flightDetails').innerHTML = `
+                <h3>航班信息</h3>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">航班号</div>
+                        <div class="detail-value">${currentBookingFlight.id}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">航线</div>
+                        <div class="detail-value">${currentBookingFlight.from} → ${currentBookingFlight.to}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">日期</div>
+                        <div class="detail-value">${currentBookingFlight.date}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">时间</div>
+                        <div class="detail-value">${currentBookingFlight.departure}-${currentBookingFlight.arrival}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">原价</div>
+                        <div class="detail-value">¥${currentBookingFlight.price.economy}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">优惠价</div>
+                        <div class="detail-value" style="color: #48bb78;">¥${discountedPrice}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startBookingTimer() {
+            if (bookingTimer) clearInterval(bookingTimer);
+            timeLeft = 900;
+            updateTimer();
+            bookingTimer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(bookingTimer);
+                    closeBooking();
+                    alert('预订超时，请重新开始');
+                } else {
+                    updateTimer();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('bookingTimer').textContent = 
+                `请在 ${minutes}:${seconds.toString().padStart(2, '0')} 内完成预订`;
+        }
+
+        function nextStep(step) {
+            if (step === 2 && !validatePassengerForm()) return;
+            if (step === 3 && !selectedPayment) {
+                alert('请选择支付方式');
+                return;
+            }
+
+            document.querySelectorAll('.step').forEach((el, index) => {
+                el.classList.toggle('active', index + 1 <= step);
+            });
+
+            document.querySelectorAll('.step-content').forEach((el, index) => {
+                el.classList.toggle('active', index + 1 === step);
+            });
+
+            if (step === 3) {
+                updateOrderSummary();
+            }
+        }
+
+        function validatePassengerForm() {
+            const form = document.getElementById('passengerForm');
+            const inputs = form.querySelectorAll('input');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.style.borderColor = '#e53e3e';
+                } else {
+                    input.style.borderColor = '#e2e8f0';
+                }
+            });
+
+            if (!isValid) {
+                alert('请填写所有必填信息');
+            }
+            return isValid;
+        }
+
+        function selectPayment(element, method) {
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            selectedPayment = method;
+        }
+
+        function updateOrderSummary() {
+            const form = document.getElementById('passengerForm');
+            const discountedPrice = calculateDiscountedPrice(
+                currentBookingFlight.price.economy,
+                currentBookingFlight.discount
+            );
+
+            document.getElementById('orderSummary').innerHTML = `
+                <div class="summary-item">
+                    <span class="summary-label">乘客姓名</span>
+                    <span class="summary-value">${form.querySelector('input[placeholder="请输入姓名"]').value}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">联系电话</span>
+                    <span class="summary-value">${form.querySelector('input[placeholder="请输入手机号"]').value}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">支付方式</span>
+                    <span class="summary-value">${getPaymentMethodName(selectedPayment)}</span>
+                </div>
+                <div class="total-price">
+                    应付金额：¥${discountedPrice}
+                </div>
+            `;
+        }
+
+        function getPaymentMethodName(method) {
+            const methods = {
+                alipay: '支付宝',
+                wechat: '微信支付',
+                card: '银行卡'
+            };
+            return methods[method] || method;
+        }
+
+        function confirmBooking() {
+            const form = document.getElementById('passengerForm');
+            const discountedPrice = calculateDiscountedPrice(
+                currentBookingFlight.price.economy,
+                currentBookingFlight.discount
+            );
+
+            // 保存订单信息到 localStorage
+            const orderInfo = {
+                orderId: generateOrderId(),
+                flightId: currentBookingFlight.id,
+                passengerName: form.querySelector('#passenger-name').value,
+                idNumber: form.querySelector('#id-number').value,
+                phone: form.querySelector('#phone').value,
+                email: form.querySelector('#email').value,
+                amount: discountedPrice,
+                paymentMethod: selectedPayment,
+                orderTime: new Date().toISOString(),
+                status: 'pending' // pending, paid, cancelled
+            };
+
+            // 获取或初始化订单列表
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            orders.push(orderInfo);
+            localStorage.setItem('orders', JSON.stringify(orders));
+
+            // 构建支付页面 URL
+            const paymentUrl = new URL('payment.html', window.location.href);
+            paymentUrl.searchParams.set('orderId', orderInfo.orderId);
+            paymentUrl.searchParams.set('flightId', currentBookingFlight.id);
+            paymentUrl.searchParams.set('amount', discountedPrice);
+            paymentUrl.searchParams.set('passengerName', orderInfo.passengerName);
+            paymentUrl.searchParams.set('paymentMethod', selectedPayment);
+
+            // 跳转到支付页面
+            window.location.href = paymentUrl.toString();
+        }
+
+        // 生成订单号
+        function generateOrderId() {
+            const timestamp = Date.now().toString().slice(-8);
+            const random = Math.random().toString(36).slice(-4).toUpperCase();
+            return `ORDER${timestamp}${random}`;
+        }
+
+        function resetBooking() {
+            currentBookingFlight = null;
+            selectedPayment = null;
+            if (bookingTimer) clearInterval(bookingTimer);
+            document.getElementById('passengerForm').reset();
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            nextStep(1);
+        }
+
+        // 监听航班数据更新
+        window.addEventListener('flightsUpdated', (event) => {
+            const flights = event.detail.flights;
+            updateOffers(flights);
+            updateCityFilter(flights);
+        });
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            const flights = JSON.parse(localStorage.getItem('flights')) || [];
+            updateOffers(flights);
+            updateCityFilter(flights);
+        });
+
+        // 检查用户权限
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            if (userInfo && userInfo.role === 'admin') {
+                document.getElementById('adminLinks').style.display = 'inline';
+            }
+        });
+
+        // 检查是否是从预订链接过来的
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('booking') === 'true') {
+                const bookingInfo = JSON.parse(localStorage.getItem('currentBooking'));
+                if (bookingInfo) {
+                    // 显示预订表单并填充航班信息
+                    showBookingForm(bookingInfo);
+                }
+            }
+        });
+
+        // 添加显示预订表单的函数
+        function showBookingForm(bookingInfo) {
+            const flight = bookingInfo.flight;
+            const modal = document.querySelector('.booking-modal');
+            currentBookingFlight = flight;
+            
+            // 更新模态框内容
+            document.getElementById('bookingFlightInfo').innerHTML = `
+                <div class="flight-info">
+                    <h3>航班信息</h3>
+                    <p>航班号：${flight.id}</p>
+                    <p>航线：${flight.from} → ${flight.to}</p>
+                    <p>时间：${flight.departure} - ${flight.arrival}</p>
+                    <p>舱位：${getClassTypeName(bookingInfo.classType)}</p>
+                    <p>票价：¥${bookingInfo.price}</p>
+                    <p>乘客数：${bookingInfo.passengers}人</p>
+                </div>
+            `;
+
+            // 显示模态框
+            modal.style.display = 'flex';
+            startBookingTimer();
+        }
+
+        // 添加获取舱位类型名称的函数
+        function getClassTypeName(classType) {
+            const types = {
+                economy: '经济舱',
+                business: '商务舱',
+                first: '头等舱'
+            };
+            return types[classType] || classType;
+        }
+    </script>
+</body>
+</html> 

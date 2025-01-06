@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人信息 - 机票预订系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2em;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #764ba2;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        input:disabled {
+            background-color: #f7fafc;
+            cursor: not-allowed;
+        }
+
+        .edit-toggle {
+            color: #667eea;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.2);
+        }
+
+        button.cancel {
+            background: #e2e8f0;
+            margin-right: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #48bb78;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="header">
+            <h1>个人信息</h1>
+            <nav class="nav-links">
+                <a href="my-orders.html">我的订单</a>
+                <a href="special-offers.html">特价机票</a>
+                <!-- 管理员链接，默认隐藏 -->
+                <span id="adminLinks" style="display: none;">
+                    <a href="dashboard.html">仪表盘</a>
+                    <a href="flight-management.html">航班管理</a>
+                </span>
+                <a href="index.html">返回首页</a>
+            </nav>
+        </div>
+
+        <form id="profileForm">
+            <div class="form-group">
+                <label for="username">用户名 <span class="edit-toggle" onclick="toggleEdit('username')">编辑</span></label>
+                <input type="text" id="username" name="username" disabled>
+                <div class="error-message" id="username-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">电子邮箱 <span class="edit-toggle" onclick="toggleEdit('email')">编辑</span></label>
+                <input type="email" id="email" name="email" disabled>
+                <div class="error-message" id="email-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">手机号码 <span class="edit-toggle" onclick="toggleEdit('phone')">编辑</span></label>
+                <input type="tel" id="phone" name="phone" disabled>
+                <div class="error-message" id="phone-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">新密码 <span class="edit-toggle" onclick="toggleEdit('newPassword')">修改密码</span></label>
+                <input type="password" id="newPassword" name="newPassword" disabled placeholder="输入新密码">
+                <div class="error-message" id="password-error"></div>
+            </div>
+
+            <div class="buttons" id="actionButtons" style="display: none;">
+                <button type="button" class="cancel" onclick="cancelEdit()">取消</button>
+                <button type="submit">保存修改</button>
+            </div>
+
+            <div class="success-message" id="success-message"></div>
+        </form>
+    </div>
+
+    <script>
+        // 页面加载时获取用户数据
+        document.addEventListener('DOMContentLoaded', function() {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (userData) {
+                document.getElementById('username').value = userData.username;
+                document.getElementById('email').value = userData.email;
+                document.getElementById('phone').value = userData.phone;
+            } else {
+                alert('请先登录！');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // 切换输入框编辑状态
+        function toggleEdit(fieldId) {
+            const input = document.getElementById(fieldId);
+            input.disabled = !input.disabled;
+            if (!input.disabled) {
+                input.focus();
+                document.getElementById('actionButtons').style.display = 'flex';
+            }
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.disabled = true;
+            });
+            document.getElementById('actionButtons').style.display = 'none';
+            
+            // 重置表单数据
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (userData) {
+                document.getElementById('username').value = userData.username;
+                document.getElementById('email').value = userData.email;
+                document.getElementById('phone').value = userData.phone;
+            }
+            document.getElementById('newPassword').value = '';
+        }
+
+        // 表单提交处理
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let isValid = true;
+
+            // 清除所有错误消息
+            document.querySelectorAll('.error-message').forEach(elem => {
+                elem.style.display = 'none';
+            });
+
+            const username = document.getElementById('username');
+            const email = document.getElementById('email');
+            const phone = document.getElementById('phone');
+            const newPassword = document.getElementById('newPassword');
+
+            // 验证邮箱
+            if (!username.disabled && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+                showError('email-error', '请输入有效的邮箱地址');
+                isValid = false;
+            }
+
+            // 验证手机号
+            if (!phone.disabled && !/^1[3-9]\d{9}$/.test(phone.value)) {
+                showError('phone-error', '请输入有效的手机号码');
+                isValid = false;
+            }
+
+            // 验证新密码
+            if (!newPassword.disabled && newPassword.value) {
+                if (newPassword.value.length < 8) {
+                    showError('password-error', '密码长度至少8个字符');
+                    isValid = false;
+                }
+            }
+
+            if (isValid) {
+                // 获取现有数据
+                const userData = JSON.parse(localStorage.getItem('userData'));
+                
+                // 更新修改的字段
+                if (!username.disabled) userData.username = username.value;
+                if (!email.disabled) userData.email = email.value;
+                if (!phone.disabled) userData.phone = phone.value;
+                if (!newPassword.disabled && newPassword.value) {
+                    userData.password = newPassword.value;
+                }
+
+                // 保存更新后的数据
+                localStorage.setItem('userData', JSON.stringify(userData));
+
+                // 显示成功消息
+                const successMessage = document.getElementById('success-message');
+                successMessage.textContent = '个人信息更新成功！';
+                successMessage.style.display = 'block';
+
+                // 重置表单状态
+                cancelEdit();
+
+                // 3秒后隐藏成功消息
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const adminLinks = document.getElementById('adminLinks');
+            
+            if (!userInfo) {
+                // 未登录用户重定向到登录页面
+                window.location.href = 'login.html';
+            } else {
+                // 只有管理员可以看到管理员链接
+                if (userInfo.role === 'admin') {
+                    adminLinks.style.display = 'inline';
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
